@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Gameday Men's Health — Task Manager</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a1a2e;
+      --primary-light: #2a2a4a;
+      --accent: #cc0000;
+      --accent-hover: #a80000;
+      --accent-glow: rgba(204, 0, 0, 0.15);
+      --bg: #ffffff;
+      --card: rgba(255, 255, 255, 0.9);
+      --card-solid: #ffffff;
+      --card-hover: rgba(245, 245, 250, 0.95);
+      --text: #1a1a2e;
+      --text-muted: #6b7a99;
+      --text-dim: #9ca3af;
+      --border: rgba(0, 0, 0, 0.1);
+      --border-light: rgba(0, 0, 0, 0.06);
+      --success: #16a34a;
+      --success-glow: rgba(22, 163, 74, 0.1);
+      --warning: #d97706;
+      --danger: #cc0000;
+      --high: #cc0000;
+      --medium: #d97706;
+      --low: #16a34a;
+      --clinical: #0d9488;
+      --frontdesk: #2563eb;
+      --ma: #9333ea;
+      --owner: #d97706;
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(0, 0, 0, 0.08);
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+      --radius: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #ccc transparent;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ========== LOADING ========== */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    .loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .loading-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ========== CLINIC ENTRY ========== */
+    .clinic-entry {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .clinic-entry-card {
+      background: var(--card-solid);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .clinic-entry-logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+    .clinic-entry-logo .brand { color: var(--accent); }
+    .clinic-entry-logo .sub {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0;
+      display: block;
+      margin-top: 4px;
+    }
+    .clinic-entry-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin: 20px 0 28px;
+    }
+    .clinic-entry-form {
+      display: flex;
+      gap: 10px;
+    }
+    .clinic-entry-form input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(240, 242, 245, 0.8);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    .clinic-entry-form input::placeholder { color: var(--text-dim); }
+    .clinic-entry-form input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .clinic-entry-form button {
+      padding: 12px 28px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .clinic-entry-form button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    /* ========== PIN OVERLAY ========== */
+    .pin-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.97);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    .pin-overlay.hidden { display: none; }
+    .pin-card {
+      background: var(--card-solid);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      width: 90%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .pin-card h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .pin-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .pin-input {
+      width: 160px;
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      font-family: inherit;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 8px;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .pin-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .pin-error {
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin-top: -12px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .pin-submit {
+      padding: 12px 32px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pin-submit:hover { background: var(--accent-hover); }
+
+    /* ========== HEADER ========== */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .header-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .header-logo .brand { color: var(--accent); }
+    .header-logo .sub {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-date {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .icon-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--glass-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .icon-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(204, 0, 0, 0.06);
+    }
+    .icon-btn svg { width: 18px; height: 18px; }
+
+    /* ========== LAYOUT ========== */
+    .app-wrap { display: none; }
+    .app-wrap.visible { display: block; }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 80px;
+    }
+
+    /* ========== STATS DASHBOARD ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .stat-card:nth-child(1)::before { background: var(--accent); }
+    .stat-card:nth-child(2)::before { background: var(--success); }
+    .stat-card:nth-child(3)::before { background: var(--warning); }
+    .stat-card:nth-child(4)::before { background: var(--frontdesk); }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--border); }
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .stat-card:nth-child(1) .stat-value { color: var(--text); }
+    .stat-card:nth-child(2) .stat-value { color: var(--success); }
+    .stat-card:nth-child(3) .stat-value { color: var(--warning); }
+
+    .stat-ring-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .stat-ring {
+      width: 52px; height: 52px;
+      position: relative;
+    }
+    .stat-ring svg {
+      width: 52px; height: 52px;
+      transform: rotate(-90deg);
+    }
+    .stat-ring .ring-bg {
+      fill: none;
+      stroke: var(--border);
+      stroke-width: 4;
+    }
+    .stat-ring .ring-fill {
+      fill: none;
+      stroke: var(--frontdesk);
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease;
+    }
+    .stat-ring-pct {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--frontdesk);
+      line-height: 1;
+    }
+    .stat-ring-pct span { font-size: 0.85rem; font-weight: 500; }
+
+    /* ========== TOOLBAR ========== */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      transition: all 0.2s ease;
+    }
+    .search-box input::placeholder { color: var(--text-dim); }
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .new-task-toggle {
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .new-task-toggle:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .new-task-toggle svg { width: 16px; height: 16px; }
+    .export-btn {
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--glass-bg);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+    .export-btn:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+    }
+    .export-btn svg { width: 14px; height: 14px; }
+
+    /* ========== FILTERS & SORTS ========== */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .filter-group-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-dim);
+      margin-right: 4px;
+    }
+    .filter-pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-light);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .filter-pill:hover { border-color: var(--accent); color: var(--text); }
+    .filter-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .filter-pill.active-success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+    .filter-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 6px;
+    }
+
+    /* ========== NEW TASK FORM ========== */
+    .new-task-panel {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+    }
+    .new-task-panel.open {
+      max-height: 600px;
+      opacity: 1;
+    }
+    .new-task-inner { padding: 24px; }
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-field.flex-1 { flex: 1; min-width: 200px; }
+    .form-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+    .form-input {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(240, 242, 245, 0.8);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      min-height: 44px;
+    }
+    .form-input::placeholder { color: var(--text-dim); }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-textarea {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(240, 242, 245, 0.8);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.88rem;
+      resize: vertical;
+      min-height: 60px;
+      transition: all 0.2s ease;
+    }
+    .form-textarea::placeholder { color: var(--text-dim); }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    select.form-input {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7a99' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    select.form-input option {
+      background: var(--card-solid);
+      color: var(--text);
+    }
+    input[type="date"].form-input {
+      cursor: pointer;
+      color-scheme: light;
+    }
+
+    .pill-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .pill-option {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+    }
+    .pill-option:hover { border-color: var(--accent); color: var(--text); }
+    .pill-option.selected {
+      border-color: var(--accent);
+      background: rgba(204, 0, 0, 0.08);
+      color: var(--text);
+    }
+    .pill-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .btn-submit {
+      padding: 10px 28px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+    }
+    .btn-submit:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-cancel {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+    }
+    .btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* ========== TASK LIST ========== */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .task-item {
+      background: var(--card);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.3s ease;
+      animation: slideIn 0.3s ease;
+      position: relative;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulseNew {
+      0% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(204, 0, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(204, 0, 0, 0); }
+    }
+    .task-item.new-pulse {
+      animation: slideIn 0.3s ease, pulseNew 0.6s ease 3;
+    }
+    .task-item:hover {
+      background: var(--card-hover);
+      border-color: var(--border);
+    }
+    .task-item.completed {
+      opacity: 0.45;
+    }
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .task-item.overdue {
+      border-left: 3px solid var(--danger);
+    }
+    .task-item.completing {
+      animation: completeAnim 0.4s ease forwards;
+    }
+    @keyframes completeAnim {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.01); background: var(--success-glow); }
+      100% { transform: scale(1); }
+    }
+    @keyframes screenFlash {
+      0% { opacity: 0; }
+      20% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .screen-flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(204, 0, 0, 0.05);
+      pointer-events: none;
+      z-index: 9998;
+      animation: screenFlash 0.6s ease forwards;
+    }
+
+    .task-check {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      margin-top: 1px;
+      min-width: 22px;
+      min-height: 22px;
+    }
+    .task-check:hover {
+      border-color: var(--success);
+      background: var(--success-glow);
+    }
+    .task-check.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .task-check svg {
+      width: 14px; height: 14px;
+      color: #fff;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.2s ease;
+    }
+    .task-check.checked svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .task-body { flex: 1; min-width: 0; }
+    .task-top-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+    .task-text {
+      font-size: 0.92rem;
+      font-weight: 500;
+      word-break: break-word;
+      flex: 1;
+    }
+    .task-priority {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+    .priority-high { background: rgba(204, 0, 0, 0.1); color: var(--high); }
+    .priority-medium { background: rgba(217, 119, 6, 0.1); color: var(--medium); }
+    .priority-low { background: rgba(22, 163, 74, 0.1); color: var(--low); }
+
+    .task-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+    .task-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .task-meta-item svg { width: 12px; height: 12px; }
+    .task-cat-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .task-cat-dot.clinical { background: var(--clinical); }
+    .task-cat-dot.frontdesk { background: var(--frontdesk); }
+    .task-cat-dot.ma { background: var(--ma); }
+    .task-cat-dot.owner { background: var(--owner); }
+
+    .task-due-overdue { color: var(--danger); font-weight: 600; }
+    .task-completed-info { color: var(--success); }
+
+    .task-notes-toggle {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      padding: 0;
+      margin-top: 4px;
+      transition: color 0.2s ease;
+    }
+    .task-notes-toggle:hover { color: var(--text-muted); }
+    .task-notes-content {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: rgba(240, 242, 245, 0.6);
+      border-radius: 6px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .task-item:hover .task-actions { opacity: 1; }
+    .task-action-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      min-width: 30px;
+      min-height: 30px;
+    }
+    .task-action-btn:hover {
+      background: rgba(0,0,0,0.04);
+      color: var(--text-muted);
+    }
+    .task-action-btn.delete:hover {
+      background: rgba(204, 0, 0, 0.08);
+      color: var(--accent);
+    }
+    .task-action-btn svg { width: 15px; height: 15px; }
+
+    .edit-input {
+      background: rgba(240, 242, 245, 0.8);
+      color: var(--text);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+    .edit-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      width: 64px; height: 64px;
+      margin: 0 auto 20px;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+    .empty-sub {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.open { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal {
+      background: var(--card-solid);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: var(--shadow-lg);
+      animation: modalSlide 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @keyframes modalSlide {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+    .modal-close svg { width: 18px; height: 18px; }
+    .staff-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .staff-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: rgba(240, 242, 245, 0.6);
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+    .staff-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .staff-avatar {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .staff-details { min-width: 0; }
+    .staff-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    .staff-contact {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .staff-role-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--frontdesk);
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+    .staff-remove {
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .staff-remove:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .staff-add-section {
+      border-top: 1px solid var(--border-light);
+      padding-top: 16px;
+    }
+    .staff-add-section .form-label { margin-bottom: 8px; display: block; }
+    .staff-add-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .staff-add-grid input, .staff-add-grid select {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(240, 242, 245, 0.6);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    .staff-add-grid input::placeholder { color: var(--text-dim); }
+    .staff-add-grid input:focus, .staff-add-grid select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .staff-add-btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      width: 100%;
+      min-height: 44px;
+    }
+    .staff-add-btn:hover { background: var(--accent-hover); }
+    .staff-empty {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    /* ========== DELETE CONFIRM ========== */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: var(--card-solid);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: modalSlide 0.3s ease;
+    }
+    .confirm-icon {
+      width: 48px; height: 48px;
+      margin: 0 auto 16px;
+      background: rgba(204, 0, 0, 0.08);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .confirm-icon svg { width: 24px; height: 24px; }
+    .confirm-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .confirm-msg {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .confirm-actions button {
+      padding: 9px 24px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 44px;
+    }
+    .confirm-delete {
+      border: none;
+      background: var(--accent);
+      color: #fff;
+    }
+    .confirm-delete:hover { background: var(--accent-hover); }
+    .confirm-cancel-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .confirm-cancel-btn:hover { border-color: var(--text-muted); color: var(--text); }
+
+    /* ========== TOAST ========== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 400;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: 10px;
+      background: var(--card-solid);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+      backdrop-filter: blur(12px);
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0); }
+      to { opacity: 0; transform: translateX(30px); }
+    }
+    .toast-icon {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+    }
+    .toast-success { border-left: 3px solid var(--success); }
+    .toast-success .toast-icon { color: var(--success); }
+    .toast-danger { border-left: 3px solid var(--accent); }
+    .toast-danger .toast-icon { color: var(--accent); }
+    .toast-info { border-left: 3px solid var(--frontdesk); }
+    .toast-info .toast-icon { color: var(--frontdesk); }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 768px) {
+      .header { padding: 16px 18px; }
+      .header-logo { font-size: 1.2rem; }
+      .header-logo .sub { display: none; }
+      .container { padding: 20px 14px 80px; }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .stat-card { padding: 16px; }
+      .stat-value { font-size: 1.4rem; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-box { min-width: unset; }
+      .filter-bar { gap: 6px; }
+      .task-actions { opacity: 1; }
+      .task-item { padding: 14px; }
+      .header-date { display: none; }
+      .staff-add-grid { grid-template-columns: 1fr; }
+      .form-field.flex-1 { min-width: unset; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat-ring-wrap { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .stat-ring { width: 40px; height: 40px; }
+      .stat-ring svg { width: 40px; height: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loading-screen">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading tasks...</div>
+</div>
+
+<!-- CLINIC ENTRY (shown at /) -->
+<div class="clinic-entry" id="clinic-entry" style="display:none;">
+  <div class="clinic-entry-card">
+    <div class="clinic-entry-logo">
+      <span class="brand">GAMEDAY</span>
+      <span class="sub">Men's Health Task Manager</span>
+    </div>
+    <div class="clinic-entry-desc">Enter your clinic code to access your task dashboard.</div>
+    <div class="clinic-entry-form">
+      <input type="text" id="clinic-slug-input" placeholder="e.g. troy" autocomplete="off" autofocus />
+      <button onclick="navigateToClinic()">Go</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN OVERLAY -->
+<div class="pin-overlay hidden" id="pin-overlay">
+  <div class="pin-card">
+    <h2>Enter PIN</h2>
+    <p>This location requires a PIN to access.</p>
+    <input type="password" class="pin-input" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+    <div class="pin-error" id="pin-error">Incorrect PIN. Try again.</div>
+    <br/>
+    <button class="pin-submit" onclick="submitPin()">Unlock</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-wrap" id="app-wrap">
+  <header class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <span class="brand">GAMEDAY</span>
+        <span class="sub" id="header-location">Men's Health</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="header-date"></span>
+      <button class="icon-btn" onclick="openStaffModal()" title="Manage Staff">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed Today</div>
+        <div class="stat-value" id="stat-today">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value" id="stat-overdue">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completion Rate</div>
+        <div class="stat-ring-wrap">
+          <div class="stat-ring">
+            <svg viewBox="0 0 52 52">
+              <circle class="ring-bg" cx="26" cy="26" r="22"/>
+              <circle class="ring-fill" id="ring-fill" cx="26" cy="26" r="22" stroke-dasharray="138.23" stroke-dashoffset="138.23"/>
+            </svg>
+          </div>
+          <div class="stat-ring-pct"><span id="stat-pct">0</span><span>%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search tasks..." />
+      </div>
+      <button class="new-task-toggle" id="new-task-btn" onclick="toggleNewTaskPanel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Task
+      </button>
+      <button class="export-btn" onclick="exportCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-group">
+        <span class="filter-group-label">Status</span>
+        <button class="filter-pill active" data-filter="status" data-value="active" onclick="setFilter('status','active',this)">Active</button>
+        <button class="filter-pill" data-filter="status" data-value="completed" onclick="setFilter('status','completed',this)">Completed</button>
+        <button class="filter-pill" data-filter="status" data-value="all" onclick="setFilter('status','all',this)">All</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-group-label">Category</span>
+        <button class="filter-pill" data-filter="category" data-value="all" onclick="setFilter('category','all',this)">All</button>
+        <button class="filter-pill" data-filter="category" data-value="clinical" onclick="setFilter('category','clinical',this)">Clinical Director</button>
+        <button class="filter-pill" data-filter="category" data-value="frontdesk" onclick="setFilter('category','frontdesk',this)">Front Desk</button>
+        <button class="filter-pill" data-filter="category" data-value="ma" onclick="setFilter('category','ma',this)">MA</button>
+        <button class="filter-pill" data-filter="category" data-value="owner" onclick="setFilter('category','owner',this)">Troy Admin</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-group-label">Priority</span>
+        <button class="filter-pill" data-filter="priority" data-value="all" onclick="setFilter('priority','all',this)">All</button>
+        <button class="filter-pill" data-filter="priority" data-value="high" onclick="setFilter('priority','high',this)">High</button>
+        <button class="filter-pill" data-filter="priority" data-value="medium" onclick="setFilter('priority','medium',this)">Medium</button>
+        <button class="filter-pill" data-filter="priority" data-value="low" onclick="setFilter('priority','low',this)">Low</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <span class="filter-group-label">Sort</span>
+        <button class="filter-pill active" data-filter="sort" data-value="newest" onclick="setFilter('sort','newest',this)">Newest</button>
+        <button class="filter-pill" data-filter="sort" data-value="due" onclick="setFilter('sort','due',this)">Due Date</button>
+        <button class="filter-pill" data-filter="sort" data-value="priority" onclick="setFilter('sort','priority',this)">Priority</button>
+        <button class="filter-pill" data-filter="sort" data-value="category" onclick="setFilter('sort','category',this)">Category</button>
+      </div>
+    </div>
+
+    <!-- NEW TASK PANEL -->
+    <div class="new-task-panel" id="new-task-panel">
+      <div class="new-task-inner">
+        <div class="form-row">
+          <div class="form-field flex-1">
+            <label class="form-label">Task</label>
+            <input type="text" class="form-input" id="f-text" placeholder="What needs to be done?" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Category</label>
+            <div class="pill-selector" id="cat-selector">
+              <button class="pill-option" data-val="clinical" onclick="selectPill(this,'cat-selector')"><span class="pill-dot" style="background:var(--clinical)"></span>Clinical Director</button>
+              <button class="pill-option" data-val="frontdesk" onclick="selectPill(this,'cat-selector')"><span class="pill-dot" style="background:var(--frontdesk)"></span>Front Desk</button>
+              <button class="pill-option" data-val="ma" onclick="selectPill(this,'cat-selector')"><span class="pill-dot" style="background:var(--ma)"></span>MA</button>
+              <button class="pill-option" data-val="owner" onclick="selectPill(this,'cat-selector')"><span class="pill-dot" style="background:var(--owner)"></span>Troy Admin</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Priority</label>
+            <div class="pill-selector" id="pri-selector">
+              <button class="pill-option" data-val="high" onclick="selectPill(this,'pri-selector')"><span class="pill-dot" style="background:var(--high)"></span>High</button>
+              <button class="pill-option" data-val="medium" onclick="selectPill(this,'pri-selector')"><span class="pill-dot" style="background:var(--medium)"></span>Medium</button>
+              <button class="pill-option" data-val="low" onclick="selectPill(this,'pri-selector')"><span class="pill-dot" style="background:var(--low)"></span>Low</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field" style="min-width:160px;">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-input" id="f-due" />
+          </div>
+          <div class="form-field flex-1">
+            <label class="form-label">Assignee</label>
+            <select class="form-input" id="f-assignee">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field flex-1">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="f-notes" placeholder="Additional details (optional)"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-cancel" onclick="toggleNewTaskPanel()">Cancel</button>
+          <button class="btn-submit" id="btn-create-task" onclick="createTask()">Create Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK LIST -->
+    <div class="task-list" id="task-list"></div>
+  </div>
+</div>
+
+<!-- STAFF MODAL -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Manage Staff</div>
+      <button class="modal-close" onclick="closeStaffModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="staff-list" id="staff-list"></div>
+    <div class="staff-add-section">
+      <div class="form-label">Add Staff Member</div>
+      <div class="staff-add-grid">
+        <input type="text" id="sa-name" placeholder="Full Name" />
+        <input type="email" id="sa-email" placeholder="Email" />
+        <input type="tel" id="sa-phone" placeholder="Phone" />
+        <select id="sa-role">
+          <option value="MA">MA</option>
+          <option value="Front Desk">Front Desk</option>
+          <option value="Clinical Director">Clinical Director</option>
+          <option value="Troy Admin">Troy Admin</option>
+        </select>
+      </div>
+      <button class="staff-add-btn" onclick="addStaff()">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </div>
+    <div class="confirm-title">Delete Task</div>
+    <div class="confirm-msg">This action cannot be undone. Are you sure?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel-btn" onclick="closeConfirm()">Cancel</button>
+      <button class="confirm-delete" id="confirm-delete-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ============================================================
+  // CONFIGURATION — Replace these with your real values
+  // ============================================================
+  const SUPABASE_URL = 'https://sjyvvemjldsbiguyfkdp.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_LbdIw_sJAgJFInOdWXWphw_dIkzg8YE';
+  const N8N_WEBHOOK_URL = 'https://n8n.alphaclinicai.com/webhook/task-notifications';
+
+  // Detect if Supabase is configured
+  const USE_SUPABASE = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  let supabase = null;
+  let currentSlug = 'troy';
+  let currentLocation = { name: 'Troy', slug: 'troy', pin: null };
+  let tasks = [];
+  let staff = [];
+  let filters = { status: 'active', category: 'all', priority: 'all', sort: 'newest' };
+  let deleteTargetId = null;
+  let editingTaskId = null;
+  let sessionUserId = '';
+  let newTaskCount = 0;
+  let titleBlinkInterval = null;
+  const originalTitle = document.title;
+
+  // Generate a unique session ID to identify tasks created by this user
+  sessionUserId = sessionStorage.getItem('gd_session_id');
+  if (!sessionUserId) {
+    sessionUserId = 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    sessionStorage.setItem('gd_session_id', sessionUserId);
+  }
+
+  // ============================================================
+  // LOCAL STORAGE HELPERS (fallback when Supabase not configured)
+  // ============================================================
+  function lsKey(type) { return 'gd_' + currentSlug + '_' + type; }
+  function lsLoad(type) {
+    try { return JSON.parse(localStorage.getItem(lsKey(type))) || []; } catch(e) { return []; }
+  }
+  function lsSave(type, data) {
+    localStorage.setItem(lsKey(type), JSON.stringify(data));
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  async function init() {
+    // Initialize Supabase only if configured
+    if (USE_SUPABASE) {
+      try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (e) {
+        console.error('Supabase init error:', e);
+      }
+    }
+
+    // Request notification permission early
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    // Set header date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('header-date').textContent = dateStr;
+
+    if (USE_SUPABASE) {
+      // Determine slug from URL or sessionStorage
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      const hashSlug = window.location.hash.replace('#', '').replace(/^\/+/, '').split('?')[0];
+      const slug = hashSlug || path || sessionStorage.getItem('gd_slug') || '';
+
+      if (!slug) {
+        hideLoading();
+        document.getElementById('clinic-entry').style.display = 'flex';
+        document.getElementById('clinic-slug-input').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') navigateToClinic();
+        });
+        return;
+      }
+
+      currentSlug = slug.toLowerCase();
+      sessionStorage.setItem('gd_slug', currentSlug);
+      await loadLocation();
+    } else {
+      // localStorage mode — skip clinic entry, go straight to dashboard
+      await startApp();
+    }
+  }
+
+  async function loadLocation() {
+    if (!USE_SUPABASE) { await startApp(); return; }
+    try {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('slug', currentSlug)
+        .single();
+
+      if (error || !data) {
+        hideLoading();
+        showToast('Location not found: ' + escapeHtml(currentSlug), 'danger');
+        document.getElementById('clinic-entry').style.display = 'flex';
+        return;
+      }
+
+      currentLocation = data;
+
+      // Check PIN
+      if (data.pin) {
+        const storedPin = sessionStorage.getItem('gd_pin_' + currentSlug);
+        if (storedPin !== data.pin) {
+          hideLoading();
+          document.getElementById('pin-overlay').classList.remove('hidden');
+          document.getElementById('pin-input').focus();
+          document.getElementById('pin-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitPin();
+          });
+          return;
+        }
+      }
+
+      await startApp();
+    } catch (e) {
+      hideLoading();
+      showToast('Error loading location', 'danger');
+      console.error(e);
+    }
+  }
+
+  async function startApp() {
+    document.getElementById('pin-overlay').classList.add('hidden');
+
+    // Set location name in header
+    const locName = currentLocation.name || currentSlug.charAt(0).toUpperCase() + currentSlug.slice(1);
+    document.getElementById('header-location').innerHTML = 'Men\'s Health &mdash; ' + escapeHtml(locName);
+    document.title = 'Gameday Men\'s Health — ' + escapeHtml(locName) + ' Tasks';
+
+    // Show app
+    document.getElementById('app-wrap').classList.add('visible');
+    document.getElementById('clinic-entry').style.display = 'none';
+
+    // Load data
+    await Promise.all([loadTasks(), loadStaff()]);
+
+    // Setup realtime (only with Supabase)
+    if (USE_SUPABASE) setupRealtime();
+
+    // Setup search
+    document.getElementById('search-input').addEventListener('input', renderTasks);
+
+    // Setup focus listener for tab title blink
+    window.addEventListener('focus', function() {
+      newTaskCount = 0;
+      if (titleBlinkInterval) {
+        clearInterval(titleBlinkInterval);
+        titleBlinkInterval = null;
+      }
+      const locName = currentLocation.name || currentSlug;
+      document.title = 'Gameday Men\'s Health — ' + locName + ' Tasks';
+    });
+
+    hideLoading();
+  }
+
+  // ============================================================
+  // CLINIC ENTRY
+  // ============================================================
+  window.navigateToClinic = function() {
+    const input = document.getElementById('clinic-slug-input');
+    const slug = input.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!slug) { input.focus(); return; }
+    sessionStorage.setItem('gd_slug', slug);
+    window.location.hash = '/' + slug;
+    currentSlug = slug;
+    document.getElementById('clinic-entry').style.display = 'none';
+    showLoading();
+    loadLocation();
+  };
+
+  // ============================================================
+  // PIN
+  // ============================================================
+  window.submitPin = function() {
+    const input = document.getElementById('pin-input');
+    const val = input.value.trim();
+    if (val === currentLocation.pin) {
+      sessionStorage.setItem('gd_pin_' + currentSlug, val);
+      showLoading();
+      startApp();
+    } else {
+      document.getElementById('pin-error').style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  };
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+  function showLoading() {
+    const el = document.getElementById('loading-screen');
+    el.classList.remove('hidden');
+    el.style.display = 'flex';
+  }
+  function hideLoading() {
+    const el = document.getElementById('loading-screen');
+    el.classList.add('hidden');
+    setTimeout(() => { el.style.display = 'none'; }, 400);
+  }
+
+  // ============================================================
+  // DATA LOADING
+  // ============================================================
+  async function loadTasks() {
+    if (!USE_SUPABASE) {
+      tasks = lsLoad('tasks');
+      updateStats();
+      renderTasks();
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('location_slug', currentSlug)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      tasks = data || [];
+      updateStats();
+      renderTasks();
+    } catch (e) {
+      showToast('Error loading tasks', 'danger');
+      console.error(e);
+    }
+  }
+
+  async function loadStaff() {
+    if (!USE_SUPABASE) {
+      staff = lsLoad('staff');
+      populateAssigneeDropdown();
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('location_slug', currentSlug)
+        .eq('active', true)
+        .order('name');
+
+      if (error) throw error;
+      staff = data || [];
+      populateAssigneeDropdown();
+    } catch (e) {
+      showToast('Error loading staff', 'danger');
+      console.error(e);
+    }
+  }
+
+  function populateAssigneeDropdown() {
+    const sel = document.getElementById('f-assignee');
+    sel.innerHTML = '<option value="">Unassigned</option>';
+    staff.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name + (s.role ? ' (' + s.role + ')' : '');
+      sel.appendChild(opt);
+    });
+  }
+
+  // ============================================================
+  // REALTIME
+  // ============================================================
+  function setupRealtime() {
+    supabase
+      .channel('tasks-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tasks',
+        filter: 'location_slug=eq.' + currentSlug
+      }, (payload) => {
+        handleRealtimeChange(payload);
+      })
+      .subscribe();
+
+    supabase
+      .channel('staff-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'staff',
+        filter: 'location_slug=eq.' + currentSlug
+      }, () => {
+        loadStaff();
+        renderStaffModal();
+      })
+      .subscribe();
+  }
+
+  function handleRealtimeChange(payload) {
+    const { eventType, new: newRow, old: oldRow } = payload;
+
+    if (eventType === 'INSERT') {
+      // Add if not already in list
+      if (!tasks.find(t => t.id === newRow.id)) {
+        tasks.unshift(newRow);
+
+        // Check if it was created by someone else
+        if (newRow.created_by !== sessionUserId) {
+          notifyNewTask(newRow);
+        }
+      }
+    } else if (eventType === 'UPDATE') {
+      const idx = tasks.findIndex(t => t.id === newRow.id);
+      if (idx >= 0) {
+        tasks[idx] = newRow;
+      } else {
+        tasks.unshift(newRow);
+      }
+    } else if (eventType === 'DELETE') {
+      tasks = tasks.filter(t => t.id !== (oldRow && oldRow.id));
+    }
+
+    updateStats();
+    renderTasks();
+  }
+
+  // ============================================================
+  // NOTIFICATIONS
+  // ============================================================
+  function notifyNewTask(task) {
+    // 1. Audio ding
+    playDing();
+
+    // 2. Screen flash
+    const flash = document.createElement('div');
+    flash.className = 'screen-flash';
+    document.body.appendChild(flash);
+    setTimeout(() => flash.remove(), 700);
+
+    // 3. Browser notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const priorityText = task.priority ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1) : 'Normal';
+      new Notification('New Task: ' + (task.text || '').slice(0, 60), {
+        body: priorityText + ' priority',
+        icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23cc0000"><rect width="24" height="24" rx="4"/><text x="12" y="17" text-anchor="middle" font-size="14" fill="white" font-family="Arial" font-weight="bold">G</text></svg>')
+      });
+    }
+
+    // 4. Tab title blink
+    newTaskCount++;
+    if (!titleBlinkInterval) {
+      let show = true;
+      titleBlinkInterval = setInterval(() => {
+        const locName = currentLocation ? currentLocation.name : currentSlug;
+        if (show) {
+          document.title = '(' + newTaskCount + ' New) Gameday Tasks';
+        } else {
+          document.title = 'Gameday Men\'s Health — ' + locName + ' Tasks';
+        }
+        show = !show;
+      }, 1000);
+    }
+  }
+
+  function playDing() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    } catch (e) {
+      // Audio not available
+    }
+  }
+
+  // ============================================================
+  // STATS
+  // ============================================================
+  function updateStats() {
+    const today = new Date().toISOString().slice(0, 10);
+    const total = tasks.length;
+    const completedToday = tasks.filter(t => t.completed && t.completed_at && t.completed_at.slice(0, 10) === today).length;
+    const overdue = tasks.filter(t => !t.completed && t.due_date && t.due_date < today).length;
+    const completed = tasks.filter(t => t.completed).length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-today').textContent = completedToday;
+    document.getElementById('stat-overdue').textContent = overdue;
+    document.getElementById('stat-pct').textContent = pct;
+
+    // Update ring
+    const circ = 2 * Math.PI * 22; // ~138.23
+    const offset = circ - (pct / 100) * circ;
+    document.getElementById('ring-fill').setAttribute('stroke-dashoffset', offset);
+  }
+
+  // ============================================================
+  // RENDER TASKS
+  // ============================================================
+  function renderTasks() {
+    const container = document.getElementById('task-list');
+    const search = (document.getElementById('search-input').value || '').toLowerCase();
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Filter
+    let filtered = tasks.filter(t => {
+      if (filters.status === 'active' && t.completed) return false;
+      if (filters.status === 'completed' && !t.completed) return false;
+      if (filters.category !== 'all' && t.category !== filters.category) return false;
+      if (filters.priority !== 'all' && t.priority !== filters.priority) return false;
+      if (search) {
+        const haystack = ((t.text || '') + ' ' + (t.notes || '') + ' ' + (t.assignee_name || '')).toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+
+    // Sort
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const categoryOrder = { clinical: 0, frontdesk: 1, ma: 2, owner: 3 };
+
+    filtered.sort((a, b) => {
+      // Completed always at bottom
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+
+      if (filters.sort === 'newest') {
+        return new Date(b.created_at) - new Date(a.created_at);
+      } else if (filters.sort === 'due') {
+        const da = a.due_date || '9999-99-99';
+        const db = b.due_date || '9999-99-99';
+        return da.localeCompare(db);
+      } else if (filters.sort === 'priority') {
+        return (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2);
+      } else if (filters.sort === 'category') {
+        return (categoryOrder[a.category] || 9) - (categoryOrder[b.category] || 9);
+      }
+      return 0;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+          </svg>
+          <div class="empty-title">No tasks yet</div>
+          <div class="empty-sub">Add your first task above to get started.</div>
+        </div>`;
+      return;
+    }
+
+    const categoryLabels = { clinical: 'Clinical Director', frontdesk: 'Front Desk', ma: 'MA', owner: 'Troy Admin' };
+
+    container.innerHTML = filtered.map(t => {
+      const isOverdue = !t.completed && t.due_date && t.due_date < today;
+      const overdueCls = isOverdue ? ' overdue' : '';
+      const completedCls = t.completed ? ' completed' : '';
+      const checkedCls = t.completed ? ' checked' : '';
+      const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      let meta = '';
+      // Category
+      if (t.category) {
+        meta += '<span class="task-meta-item"><span class="task-cat-dot ' + escapeHtml(t.category) + '"></span>' + escapeHtml(categoryLabels[t.category] || t.category) + '</span>';
+      }
+      // Assignee
+      if (t.assignee_name) {
+        meta += '<span class="task-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>' + escapeHtml(t.assignee_name) + '</span>';
+      }
+      // Due date
+      if (t.due_date) {
+        const dueCls = isOverdue ? ' task-due-overdue' : '';
+        const overdueTag = isOverdue ? ' (overdue)' : '';
+        meta += '<span class="task-meta-item' + dueCls + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + escapeHtml(t.due_date) + escapeHtml(overdueTag) + '</span>';
+      }
+      // Completed info
+      if (t.completed && t.completed_at) {
+        const cDate = new Date(t.completed_at).toLocaleString();
+        const cBy = t.completed_by_name ? ' by ' + escapeHtml(t.completed_by_name) : '';
+        meta += '<span class="task-meta-item task-completed-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Completed ' + escapeHtml(cDate) + cBy + '</span>';
+      }
+
+      const priorityCls = t.priority ? ' priority-' + escapeHtml(t.priority) : '';
+      const priorityLabel = t.priority ? t.priority.charAt(0).toUpperCase() + t.priority.slice(1) : '';
+
+      let notesHtml = '';
+      if (t.notes) {
+        notesHtml = '<button class="task-notes-toggle" onclick="toggleNotes(this)">Show notes</button><div class="task-notes-content" style="display:none;">' + escapeHtml(t.notes) + '</div>';
+      }
+
+      return '<div class="task-item' + overdueCls + completedCls + '" data-id="' + t.id + '">' +
+        '<div class="task-check' + checkedCls + '" onclick="toggleComplete(\'' + t.id + '\')">' + checkSvg + '</div>' +
+        '<div class="task-body">' +
+          '<div class="task-top-row">' +
+            '<span class="task-text">' + escapeHtml(t.text) + '</span>' +
+            (priorityLabel ? '<span class="task-priority' + priorityCls + '">' + escapeHtml(priorityLabel) + '</span>' : '') +
+          '</div>' +
+          (meta ? '<div class="task-meta">' + meta + '</div>' : '') +
+          notesHtml +
+        '</div>' +
+        '<div class="task-actions">' +
+          '<button class="task-action-btn" onclick="startEdit(\'' + t.id + '\')" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+          '<button class="task-action-btn delete" onclick="openConfirm(\'' + t.id + '\')" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ============================================================
+  // TASK ACTIONS
+  // ============================================================
+  window.toggleComplete = async function(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const nowCompleted = !task.completed;
+    const el = document.querySelector('[data-id="' + id + '"]');
+    if (el && nowCompleted) el.classList.add('completing');
+
+    const updateData = {
+      completed: nowCompleted,
+      completed_at: nowCompleted ? new Date().toISOString() : null,
+      completed_by: nowCompleted ? sessionUserId : null,
+      completed_by_name: nowCompleted ? 'User' : null
+    };
+
+    if (!USE_SUPABASE) {
+      Object.assign(task, updateData);
+      lsSave('tasks', tasks);
+      updateStats();
+      renderTasks();
+      if (nowCompleted) fireWebhook('task_completed', task);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      Object.assign(task, updateData);
+      updateStats();
+      renderTasks();
+
+      if (nowCompleted) {
+        fireWebhook('task_completed', task);
+      }
+    } catch (e) {
+      showToast('Error updating task', 'danger');
+      console.error(e);
+    }
+  };
+
+  window.startEdit = function(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    editingTaskId = id;
+    const el = document.querySelector('[data-id="' + id + '"] .task-text');
+    if (!el) return;
+
+    const current = task.text;
+    el.innerHTML = '<input class="edit-input" value="' + escapeAttr(current) + '" onkeydown="handleEditKey(event, \'' + id + '\')" onblur="finishEdit(\'' + id + '\')" />';
+    el.querySelector('input').focus();
+  };
+
+  window.handleEditKey = function(e, id) {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    } else if (e.key === 'Escape') {
+      editingTaskId = null;
+      renderTasks();
+    }
+  };
+
+  window.finishEdit = async function(id) {
+    const input = document.querySelector('[data-id="' + id + '"] .edit-input');
+    if (!input) return;
+
+    const newText = input.value.trim();
+    editingTaskId = null;
+
+    if (!newText) {
+      renderTasks();
+      return;
+    }
+
+    const task = tasks.find(t => t.id === id);
+    if (!task || task.text === newText) {
+      renderTasks();
+      return;
+    }
+
+    if (!USE_SUPABASE) {
+      task.text = newText;
+      lsSave('tasks', tasks);
+      renderTasks();
+      showToast('Task updated', 'success');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ text: newText })
+        .eq('id', id);
+
+      if (error) throw error;
+      task.text = newText;
+      renderTasks();
+      showToast('Task updated', 'success');
+    } catch (e) {
+      showToast('Error updating task', 'danger');
+      renderTasks();
+    }
+  };
+
+  window.toggleNotes = function(btn) {
+    const content = btn.nextElementSibling;
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      btn.textContent = 'Hide notes';
+    } else {
+      content.style.display = 'none';
+      btn.textContent = 'Show notes';
+    }
+  };
+
+  // ============================================================
+  // CREATE TASK
+  // ============================================================
+  window.createTask = async function() {
+    const text = document.getElementById('f-text').value.trim();
+    if (!text) {
+      showToast('Task text is required', 'danger');
+      document.getElementById('f-text').focus();
+      return;
+    }
+
+    const catEl = document.querySelector('#cat-selector .pill-option.selected');
+    const priEl = document.querySelector('#pri-selector .pill-option.selected');
+    const dueDate = document.getElementById('f-due').value || null;
+    const assigneeId = document.getElementById('f-assignee').value || null;
+    const notes = document.getElementById('f-notes').value.trim() || null;
+
+    const category = catEl ? catEl.dataset.val : null;
+    const priority = priEl ? priEl.dataset.val : 'medium';
+
+    // Get assignee info
+    let assigneeName = null;
+    let assigneeObj = null;
+    if (assigneeId) {
+      assigneeObj = staff.find(s => s.id === assigneeId);
+      if (assigneeObj) assigneeName = assigneeObj.name;
+    }
+
+    const taskData = {
+      text: text,
+      category: category,
+      priority: priority,
+      due_date: dueDate,
+      assignee_id: assigneeId,
+      assignee_name: assigneeName,
+      notes: notes,
+      location_slug: currentSlug,
+      completed: false,
+      created_at: new Date().toISOString(),
+      created_by: sessionUserId
+    };
+
+    const btn = document.getElementById('btn-create-task');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+
+    function resetForm() {
+      document.getElementById('f-text').value = '';
+      document.getElementById('f-due').value = '';
+      document.getElementById('f-assignee').value = '';
+      document.getElementById('f-notes').value = '';
+      document.querySelectorAll('#cat-selector .pill-option, #pri-selector .pill-option').forEach(p => p.classList.remove('selected'));
+      toggleNewTaskPanel();
+      btn.disabled = false;
+      btn.textContent = 'Create Task';
+    }
+
+    if (!USE_SUPABASE) {
+      taskData.id = 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      tasks.unshift(taskData);
+      lsSave('tasks', tasks);
+      resetForm();
+      updateStats();
+      renderTasks();
+      showToast('Task created', 'success');
+      fireWebhook('task_created', taskData, assigneeObj);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([taskData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (!tasks.find(t => t.id === data.id)) {
+        tasks.unshift(data);
+      }
+
+      resetForm();
+      updateStats();
+      renderTasks();
+      showToast('Task created', 'success');
+      fireWebhook('task_created', data, assigneeObj);
+    } catch (e) {
+      showToast('Error creating task', 'danger');
+      console.error(e);
+      btn.disabled = false;
+      btn.textContent = 'Create Task';
+    }
+  };
+
+  // ============================================================
+  // WEBHOOK
+  // ============================================================
+  async function fireWebhook(action, task, assigneeOverride) {
+    if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL') return;
+
+    // Map task category to staff role for group notifications
+    const categoryToRole = {
+      'clinical': 'Clinical Director',
+      'frontdesk': 'Front Desk',
+      'ma': 'MA',
+      'owner': 'Troy Admin'
+    };
+
+    const targetRole = task.category ? categoryToRole[task.category] : null;
+
+    // Find ALL staff members matching this role
+    const recipients = targetRole
+      ? staff.filter(s => s.role === targetRole && (s.email || s.phone))
+      : [];
+
+    const payload = {
+      task: {
+        text: task.text,
+        category: task.category,
+        priority: task.priority,
+        dueDate: task.due_date,
+        notes: task.notes
+      },
+      recipients: recipients.map(s => ({
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+        role: s.role
+      })),
+      location: {
+        name: currentLocation ? currentLocation.name : currentSlug,
+        slug: currentSlug
+      },
+      action: action
+    };
+
+    try {
+      await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.error('Webhook error:', e);
+    }
+  }
+
+  // ============================================================
+  // DELETE
+  // ============================================================
+  window.openConfirm = function(id) {
+    deleteTargetId = id;
+    document.getElementById('confirm-overlay').classList.add('open');
+  };
+
+  window.closeConfirm = function() {
+    deleteTargetId = null;
+    document.getElementById('confirm-overlay').classList.remove('open');
+  };
+
+  window.confirmDelete = async function() {
+    if (!deleteTargetId) return;
+    const id = deleteTargetId;
+    closeConfirm();
+
+    if (!USE_SUPABASE) {
+      tasks = tasks.filter(t => t.id !== id);
+      lsSave('tasks', tasks);
+      updateStats();
+      renderTasks();
+      showToast('Task deleted', 'success');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      tasks = tasks.filter(t => t.id !== id);
+      updateStats();
+      renderTasks();
+      showToast('Task deleted', 'success');
+    } catch (e) {
+      showToast('Error deleting task', 'danger');
+      console.error(e);
+    }
+  };
+
+  // ============================================================
+  // FILTERS
+  // ============================================================
+  window.setFilter = function(type, value, btn) {
+    filters[type] = value;
+
+    // Update pill active states within same filter group
+    const group = btn.parentElement;
+    group.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.remove('active', 'active-success');
+    });
+    btn.classList.add(value === 'completed' ? 'active-success' : 'active');
+
+    renderTasks();
+  };
+
+  // ============================================================
+  // NEW TASK PANEL
+  // ============================================================
+  window.toggleNewTaskPanel = function() {
+    const panel = document.getElementById('new-task-panel');
+    panel.classList.toggle('open');
+  };
+
+  window.selectPill = function(btn, selectorId) {
+    const container = document.getElementById(selectorId);
+    container.querySelectorAll('.pill-option').forEach(p => p.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+
+  // ============================================================
+  // STAFF MANAGEMENT
+  // ============================================================
+  window.openStaffModal = function() {
+    renderStaffModal();
+    document.getElementById('staff-modal').classList.add('open');
+  };
+
+  window.closeStaffModal = function() {
+    document.getElementById('staff-modal').classList.remove('open');
+  };
+
+  function renderStaffModal() {
+    const list = document.getElementById('staff-list');
+    if (staff.length === 0) {
+      list.innerHTML = '<div class="staff-empty">No staff members yet. Add one below.</div>';
+      return;
+    }
+
+    list.innerHTML = staff.map(s => {
+      const initials = (s.name || '').split(' ').map(n => n[0] || '').join('').toUpperCase().slice(0, 2);
+      return '<div class="staff-row">' +
+        '<div class="staff-info">' +
+          '<div class="staff-avatar">' + escapeHtml(initials) + '</div>' +
+          '<div class="staff-details">' +
+            '<div class="staff-name">' + escapeHtml(s.name) + '</div>' +
+            '<div class="staff-contact">' + escapeHtml(s.email || '') + (s.phone ? ' | ' + escapeHtml(s.phone) : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        (s.role ? '<span class="staff-role-badge">' + escapeHtml(s.role) + '</span>' : '') +
+        '<button class="staff-remove" onclick="removeStaff(\'' + s.id + '\')">Remove</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  window.addStaff = async function() {
+    const name = document.getElementById('sa-name').value.trim();
+    const email = document.getElementById('sa-email').value.trim();
+    const phone = document.getElementById('sa-phone').value.trim();
+    const role = document.getElementById('sa-role').value;
+
+    if (!name) {
+      showToast('Name is required', 'danger');
+      return;
+    }
+
+    function clearStaffForm() {
+      document.getElementById('sa-name').value = '';
+      document.getElementById('sa-email').value = '';
+      document.getElementById('sa-phone').value = '';
+    }
+
+    if (!USE_SUPABASE) {
+      const newStaff = {
+        id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+        name: name,
+        email: email || null,
+        phone: phone || null,
+        role: role,
+        location_slug: currentSlug,
+        active: true
+      };
+      staff.push(newStaff);
+      lsSave('staff', staff);
+      populateAssigneeDropdown();
+      renderStaffModal();
+      clearStaffForm();
+      showToast('Staff member added', 'success');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('staff')
+        .insert([{
+          name: name,
+          email: email || null,
+          phone: phone || null,
+          role: role,
+          location_slug: currentSlug,
+          active: true
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      staff.push(data);
+      populateAssigneeDropdown();
+      renderStaffModal();
+      clearStaffForm();
+      showToast('Staff member added', 'success');
+    } catch (e) {
+      showToast('Error adding staff', 'danger');
+      console.error(e);
+    }
+  };
+
+  window.removeStaff = async function(id) {
+    if (!USE_SUPABASE) {
+      staff = staff.filter(s => s.id !== id);
+      lsSave('staff', staff);
+      populateAssigneeDropdown();
+      renderStaffModal();
+      showToast('Staff member removed', 'success');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .update({ active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      staff = staff.filter(s => s.id !== id);
+      populateAssigneeDropdown();
+      renderStaffModal();
+      showToast('Staff member removed', 'success');
+    } catch (e) {
+      showToast('Error removing staff', 'danger');
+      console.error(e);
+    }
+  };
+
+  // ============================================================
+  // EXPORT CSV
+  // ============================================================
+  window.exportCSV = function() {
+    if (tasks.length === 0) {
+      showToast('No tasks to export', 'info');
+      return;
+    }
+
+    const headers = ['Text', 'Category', 'Priority', 'Due Date', 'Assignee', 'Notes', 'Completed', 'Completed At', 'Created At'];
+    const rows = tasks.map(t => [
+      csvEscape(t.text),
+      csvEscape(t.category || ''),
+      csvEscape(t.priority || ''),
+      csvEscape(t.due_date || ''),
+      csvEscape(t.assignee_name || ''),
+      csvEscape(t.notes || ''),
+      t.completed ? 'Yes' : 'No',
+      csvEscape(t.completed_at || ''),
+      csvEscape(t.created_at || '')
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gameday-tasks-' + currentSlug + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported', 'success');
+  };
+
+  function csvEscape(str) {
+    if (!str) return '';
+    str = String(str);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  // ============================================================
+  // TOASTS
+  // ============================================================
+  function showToast(msg, type) {
+    type = type || 'info';
+    const container = document.getElementById('toast-container');
+    const icons = {
+      success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+      danger: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+      info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.innerHTML = (icons[type] || icons.info) + escapeHtml(msg);
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  // ============================================================
+  // UTILITIES
+  // ============================================================
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Close modals on overlay click
+  document.getElementById('staff-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeStaffModal();
+  });
+  document.getElementById('confirm-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+
+  // Expose showToast globally for debugging
+  window.showToast = showToast;
+
+  // Start
+  init();
+})();
+</script>
+</body>
+</html>
