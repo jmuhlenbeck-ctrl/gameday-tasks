@@ -1442,10 +1442,10 @@
             <input type="date" class="form-input" id="f-due" />
           </div>
           <div class="form-field flex-1">
-            <label class="form-label">Assignee</label>
-            <select class="form-input" id="f-assignee">
-              <option value="">Unassigned</option>
-            </select>
+            <label class="form-label">Assignee(s) — pick one or more</label>
+            <div class="form-input" id="f-assignee-list" style="max-height:132px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:8px 10px;">
+              <span style="color:var(--text-dim);font-size:0.85rem;">No staff yet</span>
+            </div>
           </div>
         </div>
         <div class="form-row">
@@ -1780,14 +1780,15 @@
   }
 
   function populateAssigneeDropdown() {
-    const sel = document.getElementById('f-assignee');
-    sel.innerHTML = '<option value="">Unassigned</option>';
-    staff.forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.name + (s.role ? ' (' + s.role + ')' : '');
-      sel.appendChild(opt);
-    });
+    const box = document.getElementById('f-assignee-list');
+    if (!box) return;
+    if (!staff.length) { box.innerHTML = '<span style="color:var(--text-dim);font-size:0.85rem;">No staff yet — add staff first</span>'; return; }
+    box.innerHTML = staff.map(s =>
+      '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;">' +
+      '<input type="checkbox" class="f-assignee-cb" value="' + s.id + '" style="width:16px;height:16px;cursor:pointer;flex:none;">' +
+      '<span>' + escapeHtml(s.name) + (s.role ? ' <span style="color:var(--text-dim)">(' + escapeHtml(s.role) + ')</span>' : '') + '</span>' +
+      '</label>'
+    ).join('');
   }
 
   // ============================================================
@@ -2178,19 +2179,16 @@
     const catEl = document.querySelector('#cat-selector .pill-option.selected');
     const priEl = document.querySelector('#pri-selector .pill-option.selected');
     const dueDate = document.getElementById('f-due').value || null;
-    const assigneeId = document.getElementById('f-assignee').value || null;
     const notes = document.getElementById('f-notes').value.trim() || null;
 
     const category = catEl ? catEl.dataset.val : null;
     const priority = priEl ? priEl.dataset.val : 'medium';
 
-    // Get assignee info
-    let assigneeName = null;
-    let assigneeObj = null;
-    if (assigneeId) {
-      assigneeObj = staff.find(s => s.id === assigneeId);
-      if (assigneeObj) assigneeName = assigneeObj.name;
-    }
+    // Get assignee info (one or more)
+    const assigneeIds = [...document.querySelectorAll('#f-assignee-list .f-assignee-cb:checked')].map(c => c.value);
+    const assigneeObjs = assigneeIds.map(id => staff.find(s => s.id === id)).filter(Boolean);
+    const assigneeId = assigneeObjs.length ? assigneeObjs[0].id : null;
+    const assigneeName = assigneeObjs.length ? assigneeObjs.map(s => s.name).join(', ') : null;
 
     const taskData = {
       text: text,
@@ -2199,6 +2197,7 @@
       due_date: dueDate,
       assignee_id: assigneeId,
       assignee_name: assigneeName,
+      assignee_ids: assigneeIds.length ? assigneeIds : null,
       notes: notes,
       location_slug: currentSlug,
       completed: false,
@@ -2213,7 +2212,7 @@
     function resetForm() {
       document.getElementById('f-text').value = '';
       document.getElementById('f-due').value = '';
-      document.getElementById('f-assignee').value = '';
+      document.querySelectorAll('#f-assignee-list .f-assignee-cb').forEach(c => c.checked = false);
       document.getElementById('f-notes').value = '';
       document.querySelectorAll('#cat-selector .pill-option, #pri-selector .pill-option').forEach(p => p.classList.remove('selected'));
       toggleNewTaskPanel();
@@ -2229,7 +2228,7 @@
       updateStats();
       renderTasks();
       showToast('Task created', 'success');
-      fireWebhook('task_created', taskData, assigneeObj);
+      fireWebhook('task_created', taskData, assigneeObjs);
       return;
     }
 
@@ -2250,7 +2249,7 @@
       updateStats();
       renderTasks();
       showToast('Task created', 'success');
-      fireWebhook('task_created', data, assigneeObj);
+      fireWebhook('task_created', data, assigneeObjs);
     } catch (e) {
       showToast('Error creating task', 'danger');
       console.error(e);
@@ -2279,6 +2278,9 @@
     const recipients = targetRole
       ? staff.filter(s => s.role === targetRole && (s.email || s.phone))
       : [];
+    // add explicitly-selected assignee(s) so tasking specific people notifies them
+    const extra = Array.isArray(assigneeOverride) ? assigneeOverride : (assigneeOverride ? [assigneeOverride] : []);
+    extra.forEach(a => { if (a && (a.email || a.phone) && !recipients.find(r => r.id === a.id)) recipients.push(a); });
 
     const payload = {
       task: {
