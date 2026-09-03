@@ -2065,7 +2065,7 @@
       lsSave('tasks', tasks);
       updateStats();
       renderTasks();
-      if (nowCompleted) fireWebhook('task_completed', task);
+      if (nowCompleted) fireWebhook('task_completed', task, assigneesOf(task));
       return;
     }
 
@@ -2082,7 +2082,7 @@
       renderTasks();
 
       if (nowCompleted) {
-        fireWebhook('task_completed', task);
+        fireWebhook('task_completed', task, assigneesOf(task));
       }
     } catch (e) {
       showToast('Error updating task', 'danger');
@@ -2261,6 +2261,16 @@
   // ============================================================
   // WEBHOOK
   // ============================================================
+  // Resolve a task's assigned staff, so completion notices reach the same
+  // people who were told about it rather than the whole category.
+  function assigneesOf(task) {
+    if (!task) return [];
+    const ids = Array.isArray(task.assignee_ids) && task.assignee_ids.length
+      ? task.assignee_ids
+      : (task.assignee_id ? [task.assignee_id] : []);
+    return ids.map(id => staff.find(s => s.id === id)).filter(Boolean);
+  }
+
   async function fireWebhook(action, task, assigneeOverride) {
     if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL') return;
 
@@ -2274,13 +2284,19 @@
 
     const targetRole = task.category ? categoryToRole[task.category] : null;
 
-    // Find ALL staff members matching this role
-    const recipients = targetRole
-      ? staff.filter(s => s.role === targetRole && (s.email || s.phone))
-      : [];
-    // add explicitly-selected assignee(s) so tasking specific people notifies them
+    // Only notify the people actually assigned the task. If nobody was picked,
+    // fall back to everyone in the role for that category (an unassigned task
+    // still needs to reach someone).
     const extra = Array.isArray(assigneeOverride) ? assigneeOverride : (assigneeOverride ? [assigneeOverride] : []);
-    extra.forEach(a => { if (a && (a.email || a.phone) && !recipients.find(r => r.id === a.id)) recipients.push(a); });
+    const picked = extra.filter(a => a && (a.email || a.phone));
+
+    const recipients = [];
+    if (picked.length) {
+      picked.forEach(a => { if (!recipients.find(r => r.id === a.id)) recipients.push(a); });
+    } else if (targetRole) {
+      staff.filter(s => s.role === targetRole && (s.email || s.phone))
+           .forEach(s => { if (!recipients.find(r => r.id === s.id)) recipients.push(s); });
+    }
 
     const payload = {
       task: {
